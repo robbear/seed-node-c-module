@@ -1,5 +1,5 @@
 {
-    "name": "seed-node-c-module",
+    "name": "seedmodule",
     "version": "1.0.0",
-    "main": "./build/Release/seed-node-c-module"
+    "main": "./build/Release/seedmodule"
 }

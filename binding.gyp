@@ -1,7 +1,7 @@
 {
   "targets": [
     {
-      "target_name": "seed-node-c-module",
+      "target_name": "seedmodule",
       "sources": [ "seed-node-c-module.cpp" ]
     }
   ]

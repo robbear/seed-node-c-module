@@ -134,4 +134,4 @@ void RegisterModule(Handle<Object> target) {
 	      FunctionTemplate::New(Async)->GetFunction());
 }
 
-NODE_MODULE("seed-node-c-module", RegisterModule);
+NODE_MODULE(seedmodule, RegisterModule);
