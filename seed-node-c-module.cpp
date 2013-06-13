@@ -1,13 +1,12 @@
-#include <node.h>
-#include <string>
+//
+// Sample asynchronous C++ Node.js extention.
+// This is initially modeled after https://github.com/kkaefer/node-cpp-modules
+// Thank you to kkaefer.
+//
+
+#include "seed-node-c-module.hpp"
 
 using namespace v8;
-
-
-// Forward declaration. Usually, you do this in a header file.
-Handle<Value> Async(const Arguments& args);
-void AsyncWork(uv_work_t* req);
-void AsyncAfter(uv_work_t* req);
 
 
 // We use a struct to store information about the asynchronous "work request".
@@ -24,7 +23,10 @@ struct Baton {
   bool error;
   std::string error_message;
 
-  // Custom data you can pass through.
+  // Hold the number of milliseconds JavaScriptLand wants to sleep
+  int32_t sleepTime;
+
+  // Custom data to return
   int32_t result;
 };
 
@@ -33,12 +35,22 @@ struct Baton {
 Handle<Value> Async(const Arguments& args) {
   HandleScope scope;
 
-  if (!args[0]->IsFunction()) {
-    return ThrowException(Exception::TypeError(
-					       String::New("First argument must be a callback function")));
+  if (args.Length() < 2) {
+    return ThrowException(Exception::Error(String::New("Requires two parameters: number, callback")));
   }
+
+  // BUGBUG - need to check for valid number
+  // if (!args[0]...
+
+  if (!args[1]->IsFunction()) {
+    return ThrowException(Exception::TypeError(String::New("First argument must be a callback function")));
+  }
+
+  Local<Integer> integer = args[0]->ToInteger();
+  int32_t sleepTime = integer->Value();
+
   // There's no ToFunction(), use a Cast instead.
-  Local<Function> callback = Local<Function>::Cast(args[0]);
+  Local<Function> callback = Local<Function>::Cast(args[1]);
 
   // The baton holds our custom status information for this asynchronous call,
   // like the callback function we want to call when returning to the main
@@ -46,6 +58,7 @@ Handle<Value> Async(const Arguments& args) {
   Baton* baton = new Baton();
   baton->error = false;
   baton->callback = Persistent<Function>::New(callback);
+  baton->sleepTime = sleepTime;
 
   // This creates the work request struct.
   uv_work_t *req = new uv_work_t();
@@ -70,7 +83,11 @@ void AsyncWork(uv_work_t* req) {
   Baton* baton = static_cast<Baton*>(req->data);
 
   // Do work in threadpool here.
-  baton->result = 42;
+  // Sleep for the specified milliseconds. Note that usleep takes microseconds.
+  usleep(baton->sleepTime * 1000);
+
+  // Return the sleep time
+  baton->result = baton->sleepTime;
 
   // If the work we do fails, set baton->error_message to the error string
   // and baton->error to true.
